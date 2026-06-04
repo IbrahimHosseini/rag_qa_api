@@ -36,5 +36,5 @@ class DocumentChunk(Base):
     document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("document.id"))
 
     document: Mapped["Document"] = relationship(
-        "Document", back_populates="document_chunk"
+        "Document", back_populates="document_chunks"
     )
