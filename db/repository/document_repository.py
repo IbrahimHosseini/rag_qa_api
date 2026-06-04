@@ -17,7 +17,9 @@ async def create_document(session: AsyncSession, document: DocumentRequest) -> D
     return new_document
 
 async def get_document(session: AsyncSession) -> Document | None:
-    pass
+    result = await session.execute(select(Document))
+
+    return result.scalars().all()
 
 async def update_document_status(session: AsyncSession, document_id: uuid.UUID, status: Status) -> Document | None:
     result = await session.execute(
