@@ -6,8 +6,8 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1536
 
     OPENAI_API_KEY: str
-
     DATABASE_URL:str
+    DEBUG: bool = True
 
     model_config = ConfigDict(env_file = ".env.local")
 
