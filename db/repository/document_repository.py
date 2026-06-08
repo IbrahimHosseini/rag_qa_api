@@ -59,4 +59,10 @@ async def create_document_chunk(session: AsyncSession, document_chunks: list[Doc
     return new_document_chunks
 
 async def search_content(session: AsyncSession, embedding: list[float], limit: int = 5) -> list[DocumentChunk] | None:
-    pass
+    result = await session.execute(
+        select(DocumentChunk)
+        .order_by(DocumentChunk.embedding.cosine_distance(embedding))
+        .limit(limit=limit)
+    )
+
+    return result.scalars().all()
