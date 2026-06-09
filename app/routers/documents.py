@@ -47,9 +47,6 @@ async def get_documents(session=Depends(get_db)):
 
 @router.post("/search", response_model=list[SearchResponse])
 async def search(content: SearchRequest, session=Depends(get_db)):
-    try:
-        embedding = await get_embedding(content.text)
-        response = await document_repository.search_content(session=session, embedding=embedding)
-        return response
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Not Found")
+    embedding = await get_embedding(content.text)
+    results = await document_repository.hybrid_search(session=session, query_text= content.text, embedding=embedding)
+    return results
