@@ -16,7 +16,7 @@ async def create_document(session: AsyncSession, document: DocumentRequest) -> D
 
     return new_document
 
-async def get_document(session: AsyncSession) -> Document | None:
+async def get_document(session: AsyncSession) -> list[Document]:
     result = await session.execute(select(Document))
 
     return result.scalars().all()
