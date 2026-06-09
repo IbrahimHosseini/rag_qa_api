@@ -21,3 +21,12 @@ class DocumentResponse(BaseModel):
     status: Status
 
     model_config = ConfigDict(from_attributes=True)
+
+class SearchResponse(BaseModel):
+    id: uuid.UUID
+    content: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+class SearchRequest(BaseModel):
+    text: str

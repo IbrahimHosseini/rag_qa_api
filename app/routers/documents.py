@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from app.services.indexing_service import index_document
+from app.services.embedding_service import get_embedding
 from db.session import get_db
-from app.schemas.document import DocumentRequest, DocumentResponse
+from app.schemas.document import DocumentRequest, DocumentResponse, SearchRequest, SearchResponse
 from db.repository import document_repository
 import shutil, uuid
 from pathlib import Path
@@ -43,3 +44,12 @@ async def upload_document(file: UploadFile = File(...), session=Depends(get_db))
 async def get_documents(session=Depends(get_db)):
     response = await document_repository.get_document(session=session)
     return response
+
+@router.post("/search", response_model=list[SearchResponse])
+async def search(content: SearchRequest, session=Depends(get_db)):
+    try:
+        embedding = await get_embedding(content.text)
+        response = await document_repository.search_content(session=session, embedding=embedding)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Not Found")
