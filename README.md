@@ -4,12 +4,31 @@ FastAPI service for document ingestion, semantic search, and conversational QA u
 
 ## Architecture
 
-```text
-PDF Upload → Parse (pdfplumber) → Split (LangChain) → Embed (OpenAI) → Store (pgvector)
-                                                                              ↓
-Natural Language Query → Rephrase (GPT-4o-mini) → Embed → Hybrid Search (Vector + BM25/trigram)
-                                                                              ↓
-                                                          Rerank (CrossEncoder) → Top-K Chunks
+```mermaid
+flowchart TD
+    subgraph Ingestion
+        A[PDF Upload] --> B[Parse\npdfplumber]
+        B --> C[Split\nLangChain]
+        C --> D[Embed\nOpenAI]
+        D --> E[(pgvector\nPostgreSQL)]
+    end
+
+    subgraph Retrieval
+        F[Natural Language Query] --> G{Has session\nhistory?}
+        G -- Yes --> H[Rephrase\nGPT-4o-mini]
+        G -- No --> I[Original Query]
+        H --> J[Embed\nOpenAI]
+        I --> J
+        J --> K[Hybrid Search\nVector + Trigram + RRF]
+        E --> K
+        K --> L[Rerank\nCrossEncoder]
+        L --> M[Top-K Chunks]
+    end
+
+    subgraph Persistence
+        F --> N[(ConversationHistory\nPostgreSQL)]
+        N --> G
+    end
 ```
 
 **Stack:**
