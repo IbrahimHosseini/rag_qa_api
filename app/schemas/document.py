@@ -1,7 +1,8 @@
 import uuid
 from pydantic import BaseModel, ConfigDict
 from db.models import Status
-
+from datetime import datetime
+from enum import Enum
 
 class DocumentRequest(BaseModel):
     file_name: str

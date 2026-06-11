@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Text, String, ForeignKey
+from sqlalchemy import Text, String, ForeignKey, DateTime
 from sqlalchemy import Enum as SAEnum
 from pgvector.sqlalchemy import Vector
 
@@ -7,6 +7,7 @@ from .base import Base
 from enum import Enum
 import uuid
 from config import settings
+from datetime import UTC, datetime
 
 class Status(str, Enum):
     pending="pending"
@@ -37,4 +38,19 @@ class DocumentChunk(Base):
 
     document: Mapped["Document"] = relationship(
         "Document", back_populates="document_chunks"
+    )
+
+class Role(str, Enum):
+    user = "user"
+    assistant = "assistant"
+
+class ConversationHistory(Base):
+    __tablename__ = "conversation_history"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID]
+    role: Mapped[Role] = mapped_column(SAEnum(Role))
+    content: Mapped[str] = mapped_column(default="")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC)
     )
