@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from app.services.indexing_service import index_document
 from app.services.embedding_service import get_embedding
+from app.services.reranker import rerank
 from db.session import get_db
 from app.schemas.document import DocumentRequest, DocumentResponse, SearchRequest, SearchResponse
 from db.repository import document_repository
@@ -49,4 +50,5 @@ async def get_documents(session=Depends(get_db)):
 async def search(content: SearchRequest, session=Depends(get_db)):
     embedding = await get_embedding(content.text)
     results = await document_repository.hybrid_search(session=session, query_text= content.text, embedding=embedding)
-    return results
+    rerank_results = await rerank(query=content.text, chunks= results)
+    return rerank_results
