@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
 
+    HF_TOKEN:str
     OPENAI_API_KEY: str
     DATABASE_URL:str
     DEBUG: bool = True

@@ -70,17 +70,16 @@ async def search_content(session: AsyncSession, embedding: list[float], limit: i
     return result.scalars().all()
 
 async def hybrid_search(session: AsyncSession, query_text: str, embedding: list[float], limit: int = 5) -> list[DocumentChunk]:
-    vector_result, text_result = await asyncio.gather(
-        session.execute(
-            select(DocumentChunk)
-            .order_by(DocumentChunk.embedding.cosine_distance(embedding))
-            .limit(limit=limit*2)
-        ),
-        session.execute(
-            select(DocumentChunk)
-            .order_by(func.similarity(DocumentChunk.content, query_text).desc())
-            .limit(limit=limit*2)
-        )
+    vector_result = await session.execute(
+        select(DocumentChunk)
+        .order_by(DocumentChunk.embedding.cosine_distance(embedding))
+        .limit(limit=limit*2)
+    )
+
+    text_result = await session.execute(
+        select(DocumentChunk)
+        .order_by(func.similarity(DocumentChunk.content, query_text).desc())
+        .limit(limit=limit*2)
     )
 
     vector_chunks = vector_result.scalars().all()

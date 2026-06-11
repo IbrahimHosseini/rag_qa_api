@@ -1,6 +1,10 @@
 from sentence_transformers import CrossEncoder
+from config import settings
 from db.models import DocumentChunk
 import asyncio
+import os
+
+os.environ["HF_TOKEN"] = settings.HF_TOKEN
 
 model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
