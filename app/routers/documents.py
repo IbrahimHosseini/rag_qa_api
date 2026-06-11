@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from app.services import reranker
 from app.services.indexing_service import index_document
 from app.services.embedding_service import get_embedding
+from app.services.query_rephraser import rephraser
 from app.services.reranker import rerank
+from db.models import Role
 from db.session import get_db
-from app.schemas.document import DocumentRequest, DocumentResponse, SearchRequest, SearchResponse
-from db.repository import document_repository
+from app.schemas.document import ChatResponse, ConversationRequest, DocumentRequest, DocumentResponse, SearchRequest, SearchResponse, ChatRequest
+from db.repository import document_repository, conversation_repository
 import shutil, uuid
 from pathlib import Path
 
@@ -50,5 +53,44 @@ async def get_documents(session=Depends(get_db)):
 async def search(content: SearchRequest, session=Depends(get_db)):
     embedding = await get_embedding(content.text)
     results = await document_repository.hybrid_search(session=session, query_text= content.text, embedding=embedding)
-    rerank_results = await rerank(query=content.text, chunks= results)
-    return rerank_results
+    reranked = await rerank(query=content.text, chunks= results)
+    return reranked
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat(chat_request: ChatRequest, session=Depends(get_db)):
+
+    history = await conversation_repository.get_history(
+        session=session, 
+        session_id=chat_request.session_id
+    )
+
+    rephrased = await rephraser(query=chat_request.query, history=history)
+
+    embedding = await get_embedding(rephrased)
+    results = await document_repository.hybrid_search(
+        session=session, 
+        query_text= rephrased, 
+        embedding=embedding
+    )
+    reranked = await rerank(query=chat_request.query, chunks= results)
+
+    conversation_request = ConversationRequest(
+        session_id=chat_request.session_id,
+        role=Role.user,
+        content=chat_request.query
+    )
+
+    await conversation_repository.add_message(
+        session=session,
+        conversation=conversation_request
+    )
+
+    await session.commit()
+
+    return ChatResponse(
+        session_id=chat_request.session_id,
+        query=chat_request.query,
+        rephrased_query=rephrased,
+        results=reranked
+    )
+

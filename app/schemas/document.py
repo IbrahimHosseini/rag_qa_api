@@ -1,6 +1,6 @@
 import uuid
 from pydantic import BaseModel, ConfigDict
-from db.models import Status
+from db.models import Role, Status
 from datetime import datetime
 from enum import Enum
 
@@ -31,3 +31,18 @@ class SearchResponse(BaseModel):
 
 class SearchRequest(BaseModel):
     text: str
+
+class ConversationRequest(BaseModel):
+    session_id: uuid.UUID
+    role: Role
+    content: str
+
+class ChatResponse(BaseModel):
+    session_id: uuid.UUID
+    query: str
+    rephrased_query: str
+    results: list[SearchResponse]
+
+class ChatRequest(BaseModel):
+    session_id: uuid.UUID
+    query: str
